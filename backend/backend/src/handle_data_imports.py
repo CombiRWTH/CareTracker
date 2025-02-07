@@ -71,22 +71,24 @@ def insert_patient_excel_into_db(df: pd.DataFrame) -> None:
             )
 
         # Add daily data
-        DailyPatientData.objects.create(
+        DailyPatientData.objects.update_or_create(
             patient=Patient.objects.get(id=patient_id),
             station=Station.objects.get(name=row['Stationsname']),
             date=date,
-            is_semi_stationary=row['Teilstationär'] == 'Ja',
-            is_fully_stationary=row['Vollstationär'] == 'Ja',
-            day_of_admission=timezone.make_aware(row['Aufnahmetag']),
-            day_of_discharge=timezone.make_aware(row['Entlassungstag']),
-            is_repeating_visit=row['Wiederkehrend'] == 'Ja',
-            night_stay=is_night_stay(date, row['Aufnahmetag'], row['Entlassungstag']),
-            day_stay=is_day_stay(date, row['Aufnahmetag'], row['Entlassungstag']),
-            room_name=row['Zimmer'],
-            bed_number=row['Bett'],
-            barthel_index=row['Barthel-Index'],
-            expanded_barthel_index=row['Erweiterter Barthel-Index'],
-            mini_mental_status=row['Mini-Mental-Status-Test']
+            defaults={
+                'is_semi_stationary': row['Teilstationär'] == 'Ja',
+                'is_fully_stationary': row['Vollstationär'] == 'Ja',
+                'day_of_admission': timezone.make_aware(row['Aufnahmetag']),
+                'day_of_discharge': timezone.make_aware(row['Entlassungstag']),
+                'is_repeating_visit': row['Wiederkehrend'] == 'Ja',
+                'night_stay': is_night_stay(date, row['Aufnahmetag'], row['Entlassungstag']),
+                'day_stay': is_day_stay(date, row['Aufnahmetag'], row['Entlassungstag']),
+                'room_name': row['Zimmer'],
+                'bed_number': row['Bett'],
+                'barthel_index': row['Barthel-Index'],
+                'expanded_barthel_index': row['Erweiterter Barthel-Index'],
+                'mini_mental_status': row['Mini-Mental-Status-Test']
+            }
         )
 
 
