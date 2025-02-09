@@ -1,5 +1,4 @@
-import React, { useRef, useState } from 'react'
-import { BarChart3, X, ChevronLeft, ChevronRight } from 'lucide-react'
+import React from 'react'
 import {
   LineChart,
   Line,
@@ -10,35 +9,18 @@ import {
   Tooltip,
   ResponsiveContainer
 } from 'recharts'
-import { addDays, subDays } from 'date-fns'
 import type { CurveType } from 'recharts/types/shape/Curve'
-import { Tooltip as TooltipCustom } from '@/components/Tooltip'
-import { DatePickerButton } from '@/components/DatePicker/DatePickerButton'
-import { useOutsideClick } from '@/util/hooks/useOutsideClick'
 
 interface ComparisonGraphProps {
-  data: any[],
-  date: Date,
-  onDateChange: (date: Date) => void,
-  dates: Date[]
+  data: any[]
 }
 
 /*
   The ComparisonGraph component is a popup that displays a comparison graph of the data provided.
   It uses the recharts library to display the data in a line chart. The data is processed to
-  display the day and night data for each station in the provided data. The component also
-  provides a date picker to change the date of the data displayed in the graph.
+  display the day and night data for each station in the provided data.
 */
-export const ComparisonGraph = ({
-  data,
-  date,
-  onDateChange,
-  dates,
-}: ComparisonGraphProps) => {
-  const [isOpen, setIsOpen] = useState(false)
-  const ref = useRef<HTMLDivElement>(null)
-  useOutsideClick([ref], () => setIsOpen(false))
-
+export const ComparisonGraph = ({ data }: ComparisonGraphProps) => {
   const processedData = data.reduce((acc: any, station: any) => {
     const stationData = {
       dayData: station.dataset_day[0] || {
@@ -63,6 +45,23 @@ export const ComparisonGraph = ({
     ]
   }, [])
 
+  // Calculate statistics
+  const findMin = (key: 'dayIs' | 'nightIs') => {
+    const minEntry = processedData.reduce((min: any, curr: any) =>
+      curr[key] < min.value ? { value: curr[key], station: curr.name } : min,
+    { value: Infinity, station: '' }
+    )
+    return {
+      value: minEntry.value.toFixed(2),
+      station: minEntry.station
+    }
+  }
+
+  const calculateAvg = (key: 'dayIs' | 'nightIs') => {
+    const sum = processedData.reduce((acc: any, curr: any) => acc + curr[key], 0)
+    return (sum / processedData.length).toFixed(2)
+  }
+
   // Define common line properties
   const baseLineProps = {
     type: 'monotone' as CurveType,
@@ -78,125 +77,99 @@ export const ComparisonGraph = ({
   }
 
   return (
-    <>
-      <TooltipCustom tooltip="Vergleichsdiagramm" containerClassName="!w-auto" position="bottom">
-        <button
-          onClick={() => setIsOpen(true)}
-          className="flex items-center gap-2 px-2 button-full-primary"
-        >
-          <BarChart3 size={24}/>
-        </button>
-      </TooltipCustom>
-
-      {isOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-20">
-          <div ref={ref} className="bg-white rounded-lg p-6 w-full max-w-4xl mx-4">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold">{'Vollzeitäquivalente: Ist- vs. Soll-Werte'}</h2>
-              <div className="flex flex-row items-center gap-x-4">
-                <div className="flex flex-row gap-x-2 items-center flex-1 justify-center">
-                  <button
-                    onClick={() => onDateChange(subDays(date, 1))}
-                    className="flex flex-col items-center"
-                  >
-                    <TooltipCustom tooltip="Vorheriger Tag" position="bottom">
-                      <ChevronLeft size={32}/>
-                    </TooltipCustom>
-                  </button>
-                  <DatePickerButton
-                    date={date}
-                    eventList={{
-                      events: dates.map(date => ({
-                        date,
-                        color: 'green'
-                      }))
-                    }}
-                    onDateClick={(_, selectedDate) => onDateChange(selectedDate)}
-                  />
-                  <button
-                    onClick={() => onDateChange(addDays(date, 1))}
-                    className="flex flex-col items-center"
-                  >
-                    <TooltipCustom tooltip="Nächster Tag" position="bottom">
-                      <ChevronRight size={32}/>
-                    </TooltipCustom>
-                  </button>
-                </div>
-                <button
-                  onClick={() => setIsOpen(false)}
-                  className="p-1 bg-gray-200 hover:bg-gray-300 rounded-md"
-                >
-                  <X size={20}/>
-                </button>
-              </div>
-            </div>
-
-            {
-              // x-axis: stations
-              // y-axis: values for the should and is data
-            }
-            <div className="h-96 w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart
-                  data={processedData}
-                  margin={{
-                    top: 5,
-                    right: 30,
-                    left: 20,
-                    bottom: 5
-                  }}
-                >
-                  <CartesianGrid strokeDasharray="3 3"/>
-                  <XAxis
-                    dataKey="name"
-                    angle={-45}
-                    textAnchor="end"
-                    height={80}
-                  />
-                  <YAxis/>
-                  <Tooltip/>
-                  <Legend/>
-                  <Line
-                    {...baseLineProps}
-                    dataKey="dayIs"
-                    name="Tag (Ist)"
-                    stroke={colors.day}
-                    strokeWidth={3}
-                    legendType="plainline"
-                  />
-                  <Line
-                    {...baseLineProps}
-                    dataKey="dayShould"
-                    name="Tag (Soll)"
-                    stroke={colors.day}
-                    strokeDasharray="5 5"
-                    strokeWidth={3}
-                    legendType="plainline"
-                  />
-                  <Line
-                    {...baseLineProps}
-                    dataKey="nightIs"
-                    name="Nacht (Ist)"
-                    stroke={colors.night}
-                    strokeWidth={3}
-                    legendType="plainline"
-                  />
-                  <Line
-                    {...baseLineProps}
-                    dataKey="nightShould"
-                    name="Nacht (Soll)"
-                    stroke={colors.night}
-                    strokeDasharray="5 5"
-                    strokeWidth={3}
-                    legendType="plainline"
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
+    <div className="flex gap-4">
+      <div className="flex-1">
+        <h2 className="text-xl font-bold mb-4">{'Vollzeitäquivalente: Ist- vs. Soll-Werte'}</h2>
+        <div className="h-96">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart
+              data={processedData}
+              margin={{
+                top: 5,
+                right: 30,
+                left: 20,
+                bottom: 5
+              }}
+            >
+              <CartesianGrid strokeDasharray="3 3"/>
+              <XAxis
+                dataKey="name"
+                angle={-45}
+                textAnchor="end"
+                height={80}
+              />
+              <YAxis/>
+              <Tooltip/>
+              <Legend/>
+              <Line
+                {...baseLineProps}
+                dataKey="dayIs"
+                name="Tag (Ist)"
+                stroke={colors.day}
+                strokeWidth={3}
+                legendType="plainline"
+              />
+              <Line
+                {...baseLineProps}
+                dataKey="dayShould"
+                name="Tag (Soll)"
+                stroke={colors.day}
+                strokeDasharray="5 5"
+                strokeWidth={3}
+                legendType="plainline"
+              />
+              <Line
+                {...baseLineProps}
+                dataKey="nightIs"
+                name="Nacht (Ist)"
+                stroke={colors.night}
+                strokeWidth={3}
+                legendType="plainline"
+              />
+              <Line
+                {...baseLineProps}
+                dataKey="nightShould"
+                name="Nacht (Soll)"
+                stroke={colors.night}
+                strokeDasharray="5 5"
+                strokeWidth={3}
+                legendType="plainline"
+              />
+            </LineChart>
+          </ResponsiveContainer>
         </div>
-      )}
-    </>
+      </div>
+
+      <div className="w-72 bg-white rounded-lg shadow-sm p-4">
+        <h3 className="font-medium mb-4 text-base">Statistik Übersicht</h3>
+        <table className="w-full">
+          <tbody className="text-sm">
+            <tr className="border-b">
+              <td className="py-2">Min Tag (Ist)</td>
+              <td className="text-right">
+                {findMin('dayIs').value}
+                <div className="text-xs text-gray-500">({findMin('dayIs').station})</div>
+              </td>
+            </tr>
+            <tr className="border-b">
+              <td className="py-2">Min Nacht (Ist)</td>
+              <td className="text-right">
+                {findMin('nightIs').value}
+                <div className="text-xs text-gray-500">({findMin('nightIs').station})</div>
+              </td>
+            </tr>
+            <tr className="border-b">
+              <td className="py-2">∅ Tag (Ist)</td>
+              <td className="text-right">{calculateAvg('dayIs')}</td>
+            </tr>
+            <tr>
+              <td className="py-2">∅ Nacht (Ist)</td>
+              <td className="text-right">{calculateAvg('nightIs')}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
   )
 }
 

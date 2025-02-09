@@ -41,7 +41,7 @@ export const Menu = ({
   const ref = useRef<HTMLDivElement>(null)
   const menuRef = useRef<HTMLDivElement>(null)
   useOutsideClick([ref, menuRef], () => setIsOpen(false))
-  const [offset, setOffset] = useState({ x: 0, y: 0 })
+  // const [_, setOffset] = useState({ x: 0, y: 0 })
 
   const bag: PropBag = {
     isOpen,
@@ -51,6 +51,7 @@ export const Menu = ({
 
   const boundingRect = ref?.current?.getBoundingClientRect()
 
+  /*
   const calculatePosition = useCallback(() => {
     let scrollTop = 0
     let scrollLeft = 0
@@ -64,18 +65,19 @@ export const Menu = ({
     }
     setOffset({ x: scrollLeft, y: scrollTop })
   }, [])
+  */
 
   const onScrollHandler = useCallback(() => {
     if (isClosingOnScroll) {
       setIsOpen(false)
     } else {
-      calculatePosition()
+      // calculatePosition()
     }
-  }, [calculatePosition, isClosingOnScroll])
+  }, [isClosingOnScroll])
 
   useEffect(() => {
     if (isOpen) {
-      calculatePosition() // Calculate position initially
+      // calculatePosition() // Calculate position initially
 
       // Add event listeners to recalculate position
       window.addEventListener('scroll', onScrollHandler, true) // Use `true` to capture scroll in bubbling phase
@@ -87,7 +89,7 @@ export const Menu = ({
         window.removeEventListener('resize', onScrollHandler)
       }
     }
-  }, [calculatePosition, isOpen, onScrollHandler])
+  }, [isOpen, onScrollHandler])
 
   return (
     <div ref={ref} className={`relative ${containerClassName}`}>
@@ -98,8 +100,8 @@ export const Menu = ({
             ref={menuRef}
             className={`absolute shadow-lg z-30 mt-2 flex flex-col gap-y-2 p-2 rounded-md bg-container ${menuContainerClassName} `}
             style={{
-              top: (boundingRect?.y ?? 0) + (boundingRect?.height ?? 0) + offset.y,
-              left: (boundingRect?.x ?? 0) + offset.y,
+              top: (boundingRect?.y ?? 0) + (boundingRect?.height ?? 0),
+              left: (boundingRect?.x ?? 0),
               width: boundingRect?.width ?? 'auto'
             }}
           >

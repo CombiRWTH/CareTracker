@@ -78,4 +78,9 @@ urlpatterns = [
         handle_analysis.handle_should_vs_is_analysis,
         name="handle_should_vs_is_analysis",
     ),
+    path(
+        "analysis/caregivers/<int:station_id>/<str:start>/<str:end>/",
+        handle_analysis.handle_station_specific_analysis,
+        name="handle_station_specific_analysis",
+    ),
 ]

@@ -4,7 +4,6 @@ import { Upload, CheckCircle, XCircle, Download } from 'lucide-react'
 import { Page } from '@/layout/Page'
 import { Header } from '@/layout/Header'
 import { LinkTiles } from '@/components/LinkTiles'
-import { Card } from '@/components/Card'
 import { useStationsAPI } from '@/api/stations'
 import type { AnalysisFrequency } from '@/api/analysis'
 import { useAnalysisAPI } from '@/api/analysis'
@@ -14,8 +13,10 @@ import { exportMonthlyAnalysis, exportDailyAnalysis } from '@/util/export'
 import { apiURL } from '@/config'
 import { getCookie } from '@/util/getCookie'
 import { ComparisonGraph } from '@/components/GraphPopup'
+import { StationTimeGraph } from '@/components/GraphForSingleStation'
 import { Menu } from '@/components/Menu'
 import { Select } from '@/components/Select'
+import { MultiSelect } from '@/components/MultiSelect'
 import { Tooltip } from '@/components/Tooltip'
 
 /*
@@ -28,9 +29,7 @@ export const AnalysisPage: NextPage = () => {
   const { data } = useAnalysisAPI(viewMode)
   const {
     data: graphData,
-    date,
-    setDate
-  } = useGraphAPI()
+  } = useGraphAPI(viewMode)
   const [selectedStations, setSelectedStations] = useState<number[]>([])
   const [isUploading, setIsUploading] = useState(false)
   const [error, setError] = useState<string>('')
@@ -39,8 +38,17 @@ export const AnalysisPage: NextPage = () => {
   const monthlyInputRef = useRef<HTMLInputElement>(null)
   const dailyInputRef = useRef<HTMLInputElement>(null)
 
-  // Special constant for the data of all stations combined
-  const COMBINED_STATIONS_KEY = -1
+  // Station options for MultiSelect
+  const stationOptions = [
+    {
+      value: -1,
+      label: 'Alle Stationen'
+    },
+    ...stations.map(station => ({
+      value: station.id,
+      label: station.name
+    }))
+  ]
 
   const canExport = selectedStations.length > 0
 
@@ -109,21 +117,15 @@ export const AnalysisPage: NextPage = () => {
     }
   }
 
-  // Toggle the selection of a station for export
-  // by adding or removing it from the selected stations
-  const toggleStationSelection = (stationId: number) => {
-    setSelectedStations(prev => {
-      if (prev.includes(stationId)) {
-        return prev.filter(id => id !== stationId)
-      }
-      return [...prev, stationId]
-    })
-  }
-
   // Use the hooks to export data for the station in an excel file
   const exportData = async () => {
     // Filter the stations
-    const filteredData = data.filter(station => selectedStations.includes(station.id))
+    let filteredData
+    if (selectedStations.includes(-1)) {
+      filteredData = data
+    } else {
+      filteredData = data.filter(station => selectedStations.includes(station.id))
+    }
 
     if (viewMode === 'daily') {
       await exportDailyAnalysis(filteredData as StationDaily[])
@@ -132,10 +134,6 @@ export const AnalysisPage: NextPage = () => {
     }
   }
 
-  const combinedValues = stations.reduce((acc, station) => ({
-    patientCount: acc.patientCount + station.patientCount,
-  }), { patientCount: 0 })
-
   return (
     <Page
       header={(
@@ -143,12 +141,6 @@ export const AnalysisPage: NextPage = () => {
           className="!justify-start gap-x-8"
           end={(
             <div className="flex justify-end w-full items-center gap-x-6">
-              <ComparisonGraph
-                data={graphData}
-                date={date}
-                onDateChange={setDate}
-                dates={[]}
-              />
               {showNotification && (error || success) && (
                 <div
                   className={`flex items-center gap-2 px-3 py-1 rounded ${
@@ -225,18 +217,27 @@ export const AnalysisPage: NextPage = () => {
                   if (file) handleFileUpload(file, 'patient')
                 }}
               />
-              <Tooltip tooltip={!canExport ? 'Stationen müssen vor dem Export durch ausgewählt werden' : 'Ausgewählte Daten exportieren'} position="bottom" containerClassName="!w-auto">
-                <button
-                  onClick={exportData}
-                  disabled={!canExport}
-                  className={`flex flex-row gap-x-2 items-center ${!canExport ? 'button-full-disabled' : 'button-full-primary'}`}
-                >
-                  <Upload size={24}/>
-                  Exportieren
-                </button>
+              <Tooltip
+                tooltip={!canExport ? 'Stationen müssen vor dem Export durch ausgewählt werden' : 'Ausgewählte Daten exportieren'}
+                position="bottom"
+                containerClassName="!w-auto"
+              >
+                <MultiSelect
+                  selected={selectedStations}
+                  onChange={(stations) => {
+                    setSelectedStations(stations)
+                    if (stations.length > 0) {
+                      exportData()
+                    }
+                  }}
+                  items={stationOptions}
+                  noneLabel="Exportieren"
+                  icon={<Upload size={24}/>}
+                />
               </Tooltip>
 
               <Select<AnalysisFrequency>
+                buttonClassName="!min-w-[150px]"
                 selected={viewMode}
                 items={[{
                   value: 'daily',
@@ -249,8 +250,7 @@ export const AnalysisPage: NextPage = () => {
                 {
                   value: 'quarterly',
                   label: 'Quartalsweise',
-                },
-                ]}
+                }]}
                 onChange={value => setViewMode(value)}
               />
             </div>
@@ -267,49 +267,19 @@ export const AnalysisPage: NextPage = () => {
         </Header>
       )}
     >
-      <div className="flex flex-col w-full p-10 gap-y-10 content-start">
-        <Card
-          key="combined-stations"
-          className={`flex flex-col gap-y-2 cursor-pointer transition-colors w-full hover:bg-primary/40 max-w-[500px]
-            ${selectedStations.includes(COMBINED_STATIONS_KEY)
-            ? 'bg-primary/30'
-            : 'bg-white'}`}
-          onClick={() => toggleStationSelection(COMBINED_STATIONS_KEY)}
-        >
-          <div className="p-4 flex flex-col">
-            <span className="text-2xl font-semibold">Alle Stationen</span>
-            <div className="flex flex-row w-full justify-between gap-x-2 items-center mt-2">
-              <span className="text-primary/90">Gesamtpatientenanzahl:</span>
-              <span className="font-semibold text-primary">{combinedValues.patientCount}</span>
-            </div>
+      <div className="flex flex-col w-full p-10 gap-y-4 content-start">
+        <div className="p-4">
+          <div className="bg-white rounded-xl shadow-md p-6">
+            <ComparisonGraph data={graphData} />
           </div>
-        </Card>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-          {data.map(value => {
-            const minutes = 'minutes' in value
-              ? value.minutes
-              : value.data.map(v => v.minutes).reduce((pre, acc) => pre + acc, 0)
-
-            return (
-              <Card
-                key={value.id}
-                className={`flex flex-col gap-y-2 cursor-pointer transition-colors hover:bg-primary/40
-                  ${selectedStations.includes(value.id)
-                  ? 'bg-primary/30'
-                  : 'bg-white'}`}
-                onClick={() => toggleStationSelection(value.id)}
-              >
-                <div className="p-4 flex flex-col h-full">
-                  <span className="text-xl font-semibold mb-auto">{value.name}</span>
-                  <div className="flex flex-row w-full justify-between items-center gap-x-4 mt-2">
-                    <span className="text-sm text-gray-500">Minuten</span>
-                    <span className="font-semibold text-primary">{minutes}</span>
-                  </div>
-                </div>
-              </Card>
-            )
-          })}
+        </div>
+        <div className="p-4">
+          <div className="bg-white rounded-xl shadow-md p-6">
+            <StationTimeGraph
+              viewMode={viewMode}
+              stations={stations}
+            />
+          </div>
         </div>
       </div>
     </Page>
