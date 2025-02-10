@@ -7,6 +7,7 @@ CareTracker helps medical staff to assess and document the time required for pat
 ## Background and Motivation
 <img width="1457" alt="CareTracker_Background" src="https://github.com/user-attachments/assets/de5f0f84-2951-44ce-96fa-6b3ea23fd234" />
 
+Icons by [Frepik](https://www.flaticon.com/authors/freepik) on [flaticon.com](https://www.flaticon.com/)
 
 ## Features
 
