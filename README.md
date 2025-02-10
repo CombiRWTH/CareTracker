@@ -7,7 +7,7 @@ CareTracker hilft medizinischem Personal die für die Patientenversorgung benöt
 ## Hintergrund und Motivation
 <img width="1457" alt="CareTracker_Background" src="https://github.com/user-attachments/assets/de5f0f84-2951-44ce-96fa-6b3ea23fd234" />
 
-
+Icons von [Frepik](https://www.flaticon.com/authors/freepik) auf [flaticon.com](https://www.flaticon.com/)
 ## Features
 
 ### Patientenklassifizierung nach PPBV
