@@ -111,8 +111,9 @@ export const exportDailyAnalysis = async (stations: StationDaily[]): Promise<voi
 /**
  * Exports the monthly Station data to an Excel file
  * @param stations The stations to use
+ * @param isQuarterly Name of the exported analysis - 'Quartalsweise' or 'Monatliche'
  */
-export const exportMonthlyAnalysis = async (stations: StationMonthly[]): Promise<void> => {
+export const exportMonthlyAnalysis = async (stations: StationMonthly[], isQuarterly: boolean): Promise<void> => {
   const workbook = new ExcelJS.Workbook()
   const worksheet = workbook.addWorksheet('Analyse')
 
@@ -191,5 +192,9 @@ export const exportMonthlyAnalysis = async (stations: StationMonthly[]): Promise
 
   // Generate the Excel file and trigger download
   const buffer = await workbook.xlsx.writeBuffer()
-  saveAsExcelFile(buffer, `${formatDateFull(new Date())}_Monatliche_Analyse.xlsx`)
+  saveAsExcelFile(
+    buffer,
+    `${formatDateFull(new Date())}_${isQuarterly ? 'Quartalsweise' : 'Monatliche'}_Analyse.xlsx`
+  );
+
 }
