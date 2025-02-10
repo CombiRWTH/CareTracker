@@ -195,6 +195,5 @@ export const exportMonthlyAnalysis = async (stations: StationMonthly[], isQuarte
   saveAsExcelFile(
     buffer,
     `${formatDateFull(new Date())}_${isQuarterly ? 'Quartalsweise' : 'Monatliche'}_Analyse.xlsx`
-  );
-
+  )
 }
