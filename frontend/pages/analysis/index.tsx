@@ -130,7 +130,7 @@ export const AnalysisPage: NextPage = () => {
     if (viewMode === 'daily') {
       await exportDailyAnalysis(filteredData as StationDaily[])
     } else {
-      await exportMonthlyAnalysis(filteredData as StationMonthly[])
+      await exportMonthlyAnalysis(filteredData as StationMonthly[], viewMode === 'quarterly')
     }
   }
 
