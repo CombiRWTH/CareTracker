@@ -68,25 +68,5 @@
       "is_child_care_unit": false,
       "max_patients_per_caregiver": 20.0
     }
-  },
-  {
-    "model": "backend.Station",
-    "pk": 8,
-    "fields": {
-      "name": "Station K1",
-      "is_intensive_care": true,
-      "is_child_care_unit": true,
-      "max_patients_per_caregiver": 5.0
-    }
-  },
-  {
-    "model": "backend.Station",
-    "pk": 9,
-    "fields": {
-      "name": "Station K3",
-      "is_intensive_care": false,
-      "is_child_care_unit": true,
-      "max_patients_per_caregiver": 10.0
-    }
   }
 ]
