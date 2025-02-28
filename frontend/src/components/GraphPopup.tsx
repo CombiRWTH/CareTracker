@@ -79,7 +79,7 @@ export const ComparisonGraph = ({ data }: ComparisonGraphProps) => {
   return (
     <div className="flex gap-4">
       <div className="flex-1">
-        <h2 className="text-xl font-bold mb-4">{'Vollzeitäquivalente: Ist- vs. Soll-Werte'}</h2>
+        <h2 className="text-xl font-bold mb-4">{'Pflegekräfte: Ist- vs. Soll-Werte'}</h2>
         <div className="h-96">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart

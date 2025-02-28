@@ -174,7 +174,7 @@ export const AnalysisPage: NextPage = () => {
                   <button
                     className={`flex flex-row gap-x-2 items-center ${isDisabled ? 'button-full-disabled' : 'button-full-primary'}`}
                     onClick={toggleOpen} disabled={isDisabled}>
-                    <Download size={24}/>
+                    <Upload size={24}/>
                     Importieren
                   </button>
                 )}
@@ -232,7 +232,7 @@ export const AnalysisPage: NextPage = () => {
                   }}
                   items={stationOptions}
                   noneLabel="Exportieren"
-                  icon={<Upload size={24}/>}
+                  icon={<Download size={24}/>}
                 />
               </Tooltip>
 

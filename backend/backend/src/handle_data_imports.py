@@ -6,6 +6,8 @@ import pandas as pd
 from ..models import Patient, DailyPatientData, Station, StationWorkloadMonthly, StationWorkloadDaily
 from datetime import datetime, date, timedelta
 from django.utils import timezone
+from cronjobs.src.nightshift_cronjob import calculate_caregivers_per_station
+from cronjobs.src.monthly_calc_cronjob import calculate
 
 
 def is_night_stay(date: date, admission_date: datetime, discharge_date: datetime) -> bool:
@@ -53,6 +55,9 @@ def is_day_stay(date: date, admission_date: datetime, discharge_date: datetime) 
 def insert_patient_excel_into_db(df: pd.DataFrame) -> None:
     """Insert patient data from an excel file into the database.
 
+    First create the missing patients and then add the daily data.
+    Finally calculate the caregivers needed per nightshift.
+
     Args:
         df (DataFrame): The DataFrame containing the patient data.
     """
@@ -90,6 +95,8 @@ def insert_patient_excel_into_db(df: pd.DataFrame) -> None:
                 'mini_mental_status': row['Mini-Mental-Status-Test']
             }
         )
+    # Update caregeivers needed per nightshift
+    calculate_caregivers_per_station()
 
 
 def get_month_number(month: str) -> int:
@@ -121,6 +128,9 @@ def get_month_number(month: str) -> int:
 def add_monthly_data(row: pd.Series) -> None:
     """Add the monthly data to the database.
 
+    Midwives and caregiver helpers are currently not included.
+    They might be necessary for other station types.
+
     Args:
         row (Series): The row containing the data.
     """
@@ -128,12 +138,12 @@ def add_monthly_data(row: pd.Series) -> None:
     date = datetime.strptime(f"{get_month_number(row['Monat'])} {timezone.now().year}", "%m %Y").date()
     shift = 'DAY' if ('Tag' == row['Schicht']) else 'NIGHT'
     average_caregiver = float(
-        row['Durchschnittliche\nPflegepersonalausstattung\nPflegefachkräfte'].replace(',', '.'))
+        row['Durchschnittliche\nPflegepersonalausstattung\nPflegefachkräfte'])
     average_caregiver_helper = float(
-        row['Durchschnittliche\nPflegepersonalausstattung\nPflegehilfskräfte'].replace(',', '.'))
-    average_midwife = float(row['Durchschnittliche\nPflegepersonalausstattung\nHebammen'].replace(',', '.'))
+        row['Durchschnittliche\nPflegepersonalausstattung\nPflegehilfskräfte'])
+    average_midwife = float(row['Durchschnittliche\nPflegepersonalausstattung\nHebammen'])
     average_total = average_caregiver + average_caregiver_helper + average_midwife
-    average_patient = float(row['Durchschnittliche\nPatientenbelegung'].replace(',', '.'))
+    average_patient = float(row['Durchschnittliche\nPatientenbelegung'])
 
     # Insert data into monthly table
     StationWorkloadMonthly.objects.update_or_create(
@@ -150,17 +160,20 @@ def add_monthly_data(row: pd.Series) -> None:
 def add_daily_data(row: pd.Series) -> None:
     """Add the daily data to the database.
 
+    Midwives and caregiver helpers are currently not included.
+    They might be necessary for other station types.
+
     Args:
         row (Series): The row containing the data.
     """
     station = Station.objects.get(name=f'Station {str(row["Station"]).strip()}')
     date = row['Datum'].date()
     shift = 'DAY' if ('Tag' == row['Schicht']) else 'NIGHT'
-    total_caregiver = float(row['Summe\nPflegefachkräfte'].replace(',', '.'))
-    total_caregiver_helper = float(row['Summe\nPflegehilfskräfte'].replace(',', '.'))
-    total_midwife = float(row['Summe\nHebammen'].replace(',', '.'))
+    total_caregiver = float(row['Summe\nPflegefachkräfte'])
+    total_caregiver_helper = float(row['Summe\nPflegehilfskräfte'])
+    total_midwife = float(row['Summe\nHebammen'])
     total_caregivers = total_caregiver + total_caregiver_helper + total_midwife
-    total_patient = float(row['Summe\nPatientenbelegung'].replace(',', '.'))
+    total_patient = float(row['Summe\nPatientenbelegung'])
 
     # Insert data into daily table
     StationWorkloadDaily.objects.update_or_create(
@@ -172,6 +185,8 @@ def add_daily_data(row: pd.Series) -> None:
             'patients_total': total_patient
         }
     )
+    # Update monthly data accordingly
+    calculate()
 
 
 def insert_caregiver_shift_excel_into_db(df: pd.DataFrame) -> None:
@@ -226,7 +241,7 @@ def handle_caregiver_shift_import(request) -> JsonResponse:
     if request.method == 'POST':
         try:
             file = BytesIO(request.body)
-            df = pd.read_excel(file, engine='openpyxl')
+            df = pd.read_excel(file, engine='openpyxl', decimal=",")
             insert_caregiver_shift_excel_into_db(df)
             return JsonResponse({'message': 'File processed successfully'})
         except Exception as e:
