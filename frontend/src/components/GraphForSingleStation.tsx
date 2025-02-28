@@ -85,7 +85,7 @@ export const StationTimeGraph = ({ viewMode, stations }: StationTimeGraphProps) 
     <div className="flex gap-4">
       <div className="flex-1">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold">{`Vollzeitäquivalente: ${data ? data.station_name : '--'}`}</h2>
+          <h2 className="text-xl font-bold">{`Pflegekräfte: ${data ? data.station_name : '--'}`}</h2>
           <Select<number>
             selected={selectedStation}
             items={stationOptions}
