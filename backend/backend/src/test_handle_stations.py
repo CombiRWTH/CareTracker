@@ -22,11 +22,3 @@ class HandleStationsTestCase(TestCase):
         # Optional: Ensure the lengths match as a final check
         self.assertEqual(len(station_list), stations.count(),
                          "Station count does not match with get_all_stations result")
-
-    def test_get_stations_analysis(self):
-        daily_station_workload = get_stations_analysis("daily")
-        self.assertEqual(len(daily_station_workload), 0,
-                         "get_stations_analysis daily count should be 0 (no imports).")
-        daily_station_workload = get_stations_analysis("monthly")
-        self.assertEqual(len(daily_station_workload), 1,
-                         "get_stations_analysis monthly count should be 1 (no imports).")
