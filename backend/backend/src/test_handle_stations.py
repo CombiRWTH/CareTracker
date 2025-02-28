@@ -1,6 +1,6 @@
 from django.test import TestCase
 
-from .handle_stations import get_all_stations, get_stations_analysis
+from .handle_stations import get_all_stations
 from ..models import Station
 
 
