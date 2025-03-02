@@ -23,37 +23,11 @@ def recompute_station_data(station_id: int, date: date) -> None:
     date = datetime.strptime(date, "%Y-%m-%d").date()
     station = Station.objects.get(id=station_id)
 
-    # Check if all patients are classified for the day (compare daily patient data and daily classification)
-    classifications_daily = DailyClassification.objects.filter(
-        station=station,
-        date=date,
-    )
-    patients_daily = DailyPatientData.objects.filter(
-        station=station,
-        date=date,
-    )
-    recompute_daily = classifications_daily.count() >= patients_daily.count()
+    # Recompute the daily data
+    calculate_minutes_per_station(station, date)
 
-    # Recompute the daily data if the date is in the past or all patients are classified
-    if date < datetime.now().date() or recompute_daily:
-        calculate_minutes_per_station(station, date)
-
-    # Check if all patients are classified for the month (compare monthly patient data and monthly classification)
-    classifications_monthly = DailyClassification.objects.filter(
-        station=station,
-        date__month=date.month,
-        date__year=date.year,
-    )
-    patients_monthly = DailyPatientData.objects.filter(
-        station=station,
-        date__month=date.month,
-        date__year=date.year,
-    )
-    recompute_monthly = classifications_monthly.count() >= patients_monthly.count()
-
-    # Recompute the monthly data if the month is over
-    if (date.month < datetime.now().month and date.year <= datetime.now().year) or recompute_monthly:
-        calculate_total_minutes_per_station(station, date, 'DAY')
+    # Recompute the monthly data
+    calculate_total_minutes_per_station(station, date, 'DAY')
 
 
 def group_and_count_data(data: list) -> dict:

@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import {
   LineChart,
   Line,
@@ -16,14 +16,23 @@ import { useGraphAPIForStation } from '@/api/graph'
 
 interface StationTimeGraphProps {
   viewMode: AnalysisFrequency,
-  stations: Station[]
+  stations: Station[],
+  refreshTrigger?: number
 }
 
-export const StationTimeGraph = ({ viewMode, stations }: StationTimeGraphProps) => {
+export const StationTimeGraph = ({ viewMode, stations, refreshTrigger = 0 }: StationTimeGraphProps) => {
   const [selectedStation, setSelectedStation] = React.useState<number>()
   const {
     data,
+    reload
   } = useGraphAPIForStation(viewMode, selectedStation ?? -1)
+
+  // Listen for refreshTrigger changes to refresh data
+  useEffect(() => {
+    if (refreshTrigger > 0) {
+      reload()
+    }
+  }, [refreshTrigger, reload])
 
   const stationOptions = stations.map(station => ({
     value: station.id,
@@ -85,7 +94,7 @@ export const StationTimeGraph = ({ viewMode, stations }: StationTimeGraphProps) 
     <div className="flex gap-4">
       <div className="flex-1">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold">{`Vollzeitäquivalente: ${data ? data.station_name : '--'}`}</h2>
+          <h2 className="text-xl font-bold">{`Pflegekräfte: ${data ? data.station_name : '--'}`}</h2>
           <Select<number>
             selected={selectedStation}
             items={stationOptions}
