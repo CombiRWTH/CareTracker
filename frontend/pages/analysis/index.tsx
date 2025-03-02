@@ -1,6 +1,6 @@
 import type { NextPage } from 'next'
 import React, { useRef, useState, useEffect } from 'react'
-import { Upload, CheckCircle, XCircle, Download } from 'lucide-react'
+import { Upload, CheckCircle, XCircle, Download, RefreshCw } from 'lucide-react'
 import { Page } from '@/layout/Page'
 import { Header } from '@/layout/Header'
 import { LinkTiles } from '@/components/LinkTiles'
@@ -26,17 +26,21 @@ export const AnalysisPage: NextPage = () => {
   // Show daily or monthly data for the stations
   const [viewMode, setViewMode] = useState<AnalysisFrequency>('daily')
   const { stations } = useStationsAPI()
-  const { data } = useAnalysisAPI(viewMode)
+  const { data, reload: refetchAnalysis } = useAnalysisAPI(viewMode)
   const {
     data: graphData,
+    reload: refetchGraph
   } = useGraphAPI(viewMode)
   const [selectedStations, setSelectedStations] = useState<number[]>([])
   const [isUploading, setIsUploading] = useState(false)
+  const [isRefreshing, setIsRefreshing] = useState(false)
   const [error, setError] = useState<string>('')
   const [success, setSuccess] = useState<string>('')
   const [showNotification, setShowNotification] = useState(false)
   const monthlyInputRef = useRef<HTMLInputElement>(null)
   const dailyInputRef = useRef<HTMLInputElement>(null)
+  // Refresh counter to trigger refreshes in child components
+  const [refreshCounter, setRefreshCounter] = useState(0)
 
   // Station options for MultiSelect
   const stationOptions = [
@@ -63,6 +67,26 @@ export const AnalysisPage: NextPage = () => {
       return () => clearTimeout(timer)
     }
   }, [showNotification])
+
+  // Reload all data from the backend
+  const handleRefresh = async () => {
+    setIsRefreshing(true)
+    try {
+      await Promise.all([
+        refetchAnalysis(),
+        refetchGraph()
+      ])
+      // Increment the refresh counter to trigger refresh in child components
+      setRefreshCounter(prev => prev + 1)
+      setSuccess('Daten erfolgreich aktualisiert')
+      setShowNotification(true)
+    } catch (err) {
+      setError('Fehler beim Aktualisieren der Daten')
+      setShowNotification(true)
+    } finally {
+      setIsRefreshing(false)
+    }
+  }
 
   // Upload excel file to the backend
   // that is used to make the further analysis for the shifts
@@ -109,6 +133,9 @@ export const AnalysisPage: NextPage = () => {
       } else if (type === 'patient' && dailyInputRef.current) {
         dailyInputRef.current.value = ''
       }
+
+      // Refresh data after successful upload
+      await handleRefresh()
     } catch (err) {
       setError('Datei-Upload fehlgeschlagen. Bitte versuchen Sie es erneut.')
     } finally {
@@ -155,6 +182,24 @@ export const AnalysisPage: NextPage = () => {
                   <span className="text-sm">{error || success}</span>
                 </div>
               )}
+              <Tooltip
+                tooltip="Daten aktualisieren"
+                position="bottom"
+                containerClassName="!w-auto"
+              >
+                <button
+                  onClick={handleRefresh}
+                  disabled={isRefreshing}
+                  className={`flex items-center justify-center rounded p-2 ${
+                    isRefreshing ? 'bg-gray-200 text-gray-500' : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                  }`}
+                >
+                  <RefreshCw
+                    size={24}
+                    className={isRefreshing ? 'animate-spin' : ''}
+                  />
+                </button>
+              </Tooltip>
               <input
                 ref={monthlyInputRef}
                 type="file"
@@ -278,6 +323,7 @@ export const AnalysisPage: NextPage = () => {
             <StationTimeGraph
               viewMode={viewMode}
               stations={stations}
+              refreshTrigger={refreshCounter}
             />
           </div>
         </div>

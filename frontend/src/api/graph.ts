@@ -49,7 +49,8 @@ export const useGraphAPI = (viewMode: AnalysisFrequency) => {
   return {
     data,
     date,
-    setDate
+    setDate,
+    reload: fetchData
   }
 }
 
@@ -98,6 +99,7 @@ export const useGraphAPIForStation = (viewMode: AnalysisFrequency, stationID: nu
   return {
     data,
     date,
-    setDate
+    setDate,
+    reload: fetchData
   }
 }

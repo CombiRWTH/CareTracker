@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import {
   LineChart,
   Line,
@@ -16,14 +16,23 @@ import { useGraphAPIForStation } from '@/api/graph'
 
 interface StationTimeGraphProps {
   viewMode: AnalysisFrequency,
-  stations: Station[]
+  stations: Station[],
+  refreshTrigger?: number
 }
 
-export const StationTimeGraph = ({ viewMode, stations }: StationTimeGraphProps) => {
+export const StationTimeGraph = ({ viewMode, stations, refreshTrigger = 0 }: StationTimeGraphProps) => {
   const [selectedStation, setSelectedStation] = React.useState<number>()
   const {
     data,
+    reload
   } = useGraphAPIForStation(viewMode, selectedStation ?? -1)
+
+  // Listen for refreshTrigger changes to refresh data
+  useEffect(() => {
+    if (refreshTrigger > 0) {
+      reload()
+    }
+  }, [refreshTrigger, reload])
 
   const stationOptions = stations.map(station => ({
     value: station.id,
