@@ -30,6 +30,7 @@ Die monatlichen Patientenpflegedaten können für das Senden an das Bundesgesund
 
 
 ## Zusätzliche Informationen
+- [Zusätzliche Informationen zur Verwendung des Systems](https://github.com/CombiRWTH/CareTracker/wiki/Usage)
 - [GitHub Wiki](https://github.com/CombiRWTH/medical-staff-assessment/wiki) und [getting started](https://github.com/CombiRWTH/medical-staff-assessment/wiki/Getting-started)
 - [Wissenschaftliches Poster](https://github.com/user-attachments/files/18629157/CareTracker_Poster.pdf) mit komplettem Projeküberblick
 
