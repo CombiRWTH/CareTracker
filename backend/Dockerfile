@@ -35,7 +35,7 @@ RUN crontab /etc/cron.d/crontab
 RUN touch /var/log/cron.log
 
 # Expose the port the app runs on
-EXPOSE $WEB_PORT
+EXPOSE 8000
 
 # Create startup script and set it as enrtypoint
 COPY start.sh /start.sh
