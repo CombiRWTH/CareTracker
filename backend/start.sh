@@ -59,6 +59,6 @@ echo "Filling database with dummy patient journies."
 python /app/manage.py loaddata /app/backend/fixtures/patient_transfers.json
 
 # Run server
-python /app/manage.py runserver 0.0.0.0:$WEB_PORT
+python /app/manage.py runserver 0.0.0.0:8000
 
 

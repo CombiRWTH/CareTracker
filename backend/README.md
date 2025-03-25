@@ -51,7 +51,6 @@ DB_PORT=5432
 DB_HOST=db
 
 # Web port
-WEB_PORT=8000
 NEXT_PUBLIC_API_URL=http://localhost/api
 ```
 

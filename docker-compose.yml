@@ -19,7 +19,7 @@ services:
     volumes:
       - ./backend:/app
     ports:
-      - "${WEB_PORT}:${WEB_PORT}" # consider changing to a static expose 8000
+      - 8000:8000
     depends_on:
       - db
     env_file:

@@ -32,7 +32,6 @@ jobs:
           DB_PASSWORD: "test"
           DB_PORT: "5432"
           DB_HOST: "db"
-          WEB_PORT: "8000"
           CORS_ALLOW_ALL_ORIGINS: "True"
         run: |
           python manage.py test backend.src
